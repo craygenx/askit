@@ -17,6 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'Alerts.dart';
 import 'CustomWidgets.dart';
 import 'Login.dart';
+
 class Homepage extends StatefulWidget {
   const Homepage({Key? key}) : super(key: key);
 
@@ -34,7 +35,7 @@ class _HomepageState extends State<Homepage> {
   int selectedTab = 0;
   int availableTasks = 0;
   bool searching = false;
-  List<Map<String, dynamic>> filteredList=[];
+  List<Map<String, dynamic>> filteredList = [];
   final List<Widget> _screens = [
     const Browse(),
     const MyTasks(),
@@ -66,6 +67,7 @@ class _HomepageState extends State<Homepage> {
     super.initState();
     user = FirebaseAuth.instance.currentUser;
   }
+
   @override
   void dispose() {
     // TODO: implement dispose
@@ -84,19 +86,36 @@ class _HomepageState extends State<Homepage> {
         fontSize: 16,
       );
 
-  void handleFilter(value) async{
-    List<Map<String, dynamic>> dataList=[];
-    QuerySnapshot querySnapshot = await firestore.collection('Tasks').where('user_id', isNotEqualTo: _auth.currentUser!.uid).get();
+  void handleFilter(value) async {
+    List<Map<String, dynamic>> dataList = [];
+    QuerySnapshot querySnapshot = await firestore
+        .collection('Tasks')
+        .where('user_id', isNotEqualTo: _auth.currentUser!.uid)
+        .get();
     for (var doc in querySnapshot.docs) {
       dataList.add(doc.data() as Map<String, dynamic>);
     }
 
     setState(() {
-      filteredList = dataList.where((element) => element['description'].toString().toLowerCase().contains(value.toLowerCase()) ||
-          element['category'].toString().toLowerCase().contains(value.toLowerCase()) ||
-          element['address'].toString().toLowerCase().contains(value.toLowerCase()) ||
-          element['task_type'].toString().toLowerCase().contains(value.toLowerCase())
-      ).toList();
+      filteredList = dataList
+          .where((element) =>
+              element['description']
+                  .toString()
+                  .toLowerCase()
+                  .contains(value.toLowerCase()) ||
+              element['category']
+                  .toString()
+                  .toLowerCase()
+                  .contains(value.toLowerCase()) ||
+              element['address']
+                  .toString()
+                  .toLowerCase()
+                  .contains(value.toLowerCase()) ||
+              element['task_type']
+                  .toString()
+                  .toLowerCase()
+                  .contains(value.toLowerCase()))
+          .toList();
     });
   }
 
@@ -164,8 +183,13 @@ class _HomepageState extends State<Homepage> {
                                     Padding(
                                       padding: const EdgeInsets.all(8.0),
                                       child: GestureDetector(
-                                        onTap: (){
-                                          Navigator.push(context, MaterialPageRoute(builder: (context)=>const Profile(title: '')));
+                                        onTap: () {
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const Profile(
+                                                          title: '')));
                                         },
                                         child: CircleAvatar(
                                           radius: 40,
@@ -202,15 +226,14 @@ class _HomepageState extends State<Homepage> {
                                   ],
                                 ),
                               ),
-                            )
-                        ),
+                            )),
                       ),
                     ),
                     SizedBox(
                       child: Column(
                         children: [
                           GestureDetector(
-                            onTap: (){
+                            onTap: () {
                               // Navigator.push(context, MaterialPageRoute(builder: (context) => const BankCardWidget()));
                             },
                             child: ListTile(
@@ -237,7 +260,7 @@ class _HomepageState extends State<Homepage> {
                             color: Colors.white30,
                           ),
                           GestureDetector(
-                            onTap: (){
+                            onTap: () {
                               // Navigator.push(context, MaterialPageRoute(builder: (context)=> const FlutterEmailVerification(email: '')));
                             },
                             child: ListTile(
@@ -353,15 +376,20 @@ class _HomepageState extends State<Homepage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _selectedNav == 'browse' ? SizedBox(
-                      width: 25,
-                        height: 25,
-                        child: Image.asset('assets/highlightedNav/Discovery.png')) : Image.asset('assets/Discovery.png'),
+                    _selectedNav == 'browse'
+                        ? SizedBox(
+                            width: 25,
+                            height: 25,
+                            child: Image.asset(
+                                'assets/highlightedNav/Discovery.png'))
+                        : Image.asset('assets/Discovery.png'),
                     // Image.asset('assets/Discovery.png'),
                     Text(
                       'Browse',
                       style: TextStyle(
-                        color: _selectedNav == 'browse' ? Colors.white : const Color(0xFFA7A7A7),
+                        color: _selectedNav == 'browse'
+                            ? Colors.white
+                            : const Color(0xFFA7A7A7),
                       ),
                     ),
                   ],
@@ -381,15 +409,20 @@ class _HomepageState extends State<Homepage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _selectedNav == 'myTasks' ? SizedBox(
-                      width: 25,
-                        height: 25,
-                        child: Image.asset('assets/highlightedNav/Work.png')) : Image.asset('assets/Work.png'),
+                    _selectedNav == 'myTasks'
+                        ? SizedBox(
+                            width: 25,
+                            height: 25,
+                            child:
+                                Image.asset('assets/highlightedNav/Work.png'))
+                        : Image.asset('assets/Work.png'),
                     // Image.asset('assets/Work.png'),
                     Text(
                       'My Tasks',
                       style: TextStyle(
-                        color: _selectedNav == 'myTasks' ? Colors.white : const Color(0xFFA7A7A7),
+                        color: _selectedNav == 'myTasks'
+                            ? Colors.white
+                            : const Color(0xFFA7A7A7),
                       ),
                     ),
                   ],
@@ -409,15 +442,20 @@ class _HomepageState extends State<Homepage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _selectedNav == 'postTask' ? SizedBox(
-                      height: 25,
-                        width: 25,
-                        child: Image.asset('assets/highlightedNav/Group 2577.png')) : Image.asset('assets/Plus.png'),
+                    _selectedNav == 'postTask'
+                        ? SizedBox(
+                            height: 25,
+                            width: 25,
+                            child: Image.asset(
+                                'assets/highlightedNav/Group 2577.png'))
+                        : Image.asset('assets/Plus.png'),
                     // Image.asset('assets/Plus.png'),
                     Text(
                       'Post Task',
                       style: TextStyle(
-                        color: _selectedNav == 'postTask' ? Colors.white : const Color(0xFFA7A7A7),
+                        color: _selectedNav == 'postTask'
+                            ? Colors.white
+                            : const Color(0xFFA7A7A7),
                       ),
                     ),
                   ],
@@ -435,15 +473,20 @@ class _HomepageState extends State<Homepage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _selectedNav == 'alerts' ? SizedBox(
-                      width: 25,
-                        height: 25,
-                        child: Image.asset('assets/highlightedNav/Notification.png')) : Image.asset('assets/Notification.png'),
+                    _selectedNav == 'alerts'
+                        ? SizedBox(
+                            width: 25,
+                            height: 25,
+                            child: Image.asset(
+                                'assets/highlightedNav/Notification.png'))
+                        : Image.asset('assets/Notification.png'),
                     // Image.asset('assets/Notification.png'),
                     Text(
                       'Alerts',
                       style: TextStyle(
-                        color: _selectedNav == 'alerts' ? Colors.white : const Color(0xFFA7A7A7),
+                        color: _selectedNav == 'alerts'
+                            ? Colors.white
+                            : const Color(0xFFA7A7A7),
                       ),
                     ),
                   ],
@@ -462,15 +505,20 @@ class _HomepageState extends State<Homepage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _selectedNav == 'messages' ? SizedBox(
-                      height: 25,
-                        width: 25,
-                        child: Image.asset('assets/highlightedNav/Chat.png')) : Image.asset('assets/Chat.png'),
+                    _selectedNav == 'messages'
+                        ? SizedBox(
+                            height: 25,
+                            width: 25,
+                            child:
+                                Image.asset('assets/highlightedNav/Chat.png'))
+                        : Image.asset('assets/Chat.png'),
                     // Image.asset('assets/Chat.png'),
                     Text(
                       'Messages',
                       style: TextStyle(
-                        color: _selectedNav == 'messages' ? Colors.white : const Color(0xFFA7A7A7),
+                        color: _selectedNav == 'messages'
+                            ? Colors.white
+                            : const Color(0xFFA7A7A7),
                       ),
                     ),
                   ],
@@ -484,6 +532,7 @@ class _HomepageState extends State<Homepage> {
     );
   }
 }
+
 class Browse extends StatefulWidget {
   const Browse({Key? key}) : super(key: key);
 
@@ -495,15 +544,16 @@ class _BrowseState extends State<Browse> {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _searchFieldController = TextEditingController();
-  final Completer<GoogleMapController> _controller = Completer<GoogleMapController>();
+  final Completer<GoogleMapController> _controller =
+      Completer<GoogleMapController>();
   List<LatLng> markerPositions = [];
   final Set<Marker> _markers = {};
-  late LatLng location;
+  LatLng location = const LatLng(19.0760, 72.8777);
   late User? user;
   String _selectedFilter = 'All';
   int availableTasks = 0;
   bool searching = false;
-  List<Map<String, dynamic>> filteredList=[];
+  List<Map<String, dynamic>> filteredList = [];
   final FocusNode _focusNode = FocusNode();
   final List<String> categories = [
     'All',
@@ -531,6 +581,7 @@ class _BrowseState extends State<Browse> {
     user = FirebaseAuth.instance.currentUser;
     _getLocation();
   }
+
   @override
   void dispose() {
     // TODO: implement dispose
@@ -549,99 +600,115 @@ class _BrowseState extends State<Browse> {
         fontSize: 16,
       );
 
-  void handleFilter(value) async{
-    List<Map<String, dynamic>> dataList=[];
-    QuerySnapshot querySnapshot = await firestore.collection('Tasks').where('user_id', isNotEqualTo: _auth.currentUser!.uid).get();
+  void handleFilter(value) async {
+    List<Map<String, dynamic>> dataList = [];
+    QuerySnapshot querySnapshot = await firestore
+        .collection('Tasks')
+        .where('user_id', isNotEqualTo: _auth.currentUser!.uid)
+        .get();
     for (var doc in querySnapshot.docs) {
       dataList.add(doc.data() as Map<String, dynamic>);
     }
 
     setState(() {
-      filteredList = dataList.where((element) => element['description'].toString().toLowerCase().contains(value.toLowerCase()) ||
-          element['category'].toString().toLowerCase().contains(value.toLowerCase()) ||
-          element['address'].toString().toLowerCase().contains(value.toLowerCase()) ||
-          element['task_type'].toString().toLowerCase().contains(value.toLowerCase())
-      ).toList();
+      filteredList = dataList
+          .where((element) =>
+              element['description']
+                  .toString()
+                  .toLowerCase()
+                  .contains(value.toLowerCase()) ||
+              element['category']
+                  .toString()
+                  .toLowerCase()
+                  .contains(value.toLowerCase()) ||
+              element['address']
+                  .toString()
+                  .toLowerCase()
+                  .contains(value.toLowerCase()) ||
+              element['task_type']
+                  .toString()
+                  .toLowerCase()
+                  .contains(value.toLowerCase()))
+          .toList();
     });
   }
-  void showAddressMap(){
-      showGeneralDialog(
-          context: context,
-          pageBuilder: ((context, animation, secondaryAnimation) {
-            return Scaffold(
-              appBar: AppBar(
-                backgroundColor: Colors.black,
-                leading: MaterialButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Icon(CommunityMaterialIcons.chevron_left, color: Colors.white, size: 20),
-                ),
-                centerTitle: true,
-                title: const Text('Map', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),),
+
+  void showAddressMap() {
+    showGeneralDialog(
+        context: context,
+        pageBuilder: ((context, animation, secondaryAnimation) {
+          return Scaffold(
+            appBar: AppBar(
+              backgroundColor: Colors.black,
+              leading: MaterialButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Icon(CommunityMaterialIcons.chevron_left,
+                    color: Colors.white, size: 20),
               ),
-              body: Stack(
-                children: [
-                  Positioned.fill(
-                      child: GoogleMap(
-                        mapType: MapType.normal,
-                        zoomGesturesEnabled: false,
-                        myLocationEnabled: false,
-                        myLocationButtonEnabled: false,
-                        initialCameraPosition: CameraPosition(
-                            target: location,
-                            zoom: 16,
-                            tilt: 80,
-                            bearing: 30
-                        ),
-                        onMapCreated: (GoogleMapController controller) => _controller.complete(controller),
-                        markers: _markers,
-                        // circles: _circles,
-                      )
-                  )
-                ],
+              centerTitle: true,
+              title: const Text(
+                'Map',
+                style:
+                    TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
               ),
-            );
-          })
-      );
+            ),
+            body: Stack(
+              children: [
+                Positioned.fill(
+                    child: GoogleMap(
+                  mapType: MapType.normal,
+                  zoomGesturesEnabled: false,
+                  myLocationEnabled: false,
+                  myLocationButtonEnabled: false,
+                  initialCameraPosition: CameraPosition(
+                      target: location, zoom: 16, tilt: 80, bearing: 30),
+                  onMapCreated: (GoogleMapController controller) =>
+                      _controller.complete(controller),
+                  markers: _markers,
+                  // circles: _circles,
+                ))
+              ],
+            ),
+          );
+        }));
     // } else{
     //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No address chosen')));
     // }
   }
 
-  void _getLocation() async{
-    try{
+  void _getLocation() async {
+    try {
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.best,
       );
-      location = LatLng(position.latitude, position.longitude);
-    }catch(e){
-      showToastMessage("Error occurred", Colors.white);
+      setState(() {
+        location = LatLng(position.latitude, position.longitude);
+      });
+    } catch (e) {
+      showToastMessage("Permission Denied", Colors.white);
     }
   }
-  void _addMarkers(){
+
+  void _addMarkers() {
     // Map<String, dynamic> tskData = dataTask;
-    for(var position in markerPositions){
-      double distance = Geolocator.distanceBetween(
-          location.latitude,
-          location.longitude,
-          position.latitude,
-          position.longitude);
-      if(distance <= 10 * 1000){
-        _markers.add(
-          Marker(
+    for (var position in markerPositions) {
+      double distance = Geolocator.distanceBetween(location.latitude,
+          location.longitude, position.latitude, position.longitude);
+      if (distance <= 10 * 1000) {
+        _markers.add(Marker(
             markerId: MarkerId(position.toString()),
             position: position,
             infoWindow: const InfoWindow(
               title: 'Offer',
               snippet: 'Snippet',
             ),
-            onTap: (){
+            onTap: () {
               // Navigator.push(context, MaterialPageRoute(builder: (context)=> TaskBrief(data: dataTask, taskId: '')));
-            }
-          )
-        );
+            }));
       }
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -672,7 +739,7 @@ class _BrowseState extends State<Browse> {
                       controller: _searchFieldController,
                       focusNode: _focusNode,
                       onChanged: (value) => handleFilter(value),
-                      onTap: (){
+                      onTap: () {
                         setState(() {
                           searching = true;
                         });
@@ -689,12 +756,14 @@ class _BrowseState extends State<Browse> {
                             _searchFieldController.clear();
                             _focusNode.unfocus();
                             filteredList.clear();
-                            searching ? setState(() {
-                              searching = false;
-                            }) : null;
+                            searching
+                                ? setState(() {
+                                    searching = false;
+                                  })
+                                : null;
                           },
                           icon: Icon(
-                            searching ? Icons.close: Icons.search,
+                            searching ? Icons.close : Icons.search,
                             color: Colors.white,
                           ),
                         ),
@@ -717,63 +786,84 @@ class _BrowseState extends State<Browse> {
                         // crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 10.0, left: 10.0, right: 10.0),
+                            padding: const EdgeInsets.only(
+                                bottom: 10.0, left: 10.0, right: 10.0),
                             child: SizedBox(
                                 width: MediaQuery.of(context).size.width,
                                 height: 80,
                                 child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       SizedBox(
                                         height: 40,
-                                        width: MediaQuery.of(context).size.width,
+                                        width:
+                                            MediaQuery.of(context).size.width,
                                         child: ListView.builder(
                                             shrinkWrap: true,
                                             scrollDirection: Axis.horizontal,
                                             itemCount: categories.length,
-                                            itemBuilder: (BuildContext context, int index){
-                                              final String categoryTitle = categories[index];
+                                            itemBuilder: (BuildContext context,
+                                                int index) {
+                                              final String categoryTitle =
+                                                  categories[index];
                                               return Padding(
-                                                padding: const EdgeInsets.only(right: 15.0),
+                                                padding: const EdgeInsets.only(
+                                                    right: 15.0),
                                                 child: GestureDetector(
-                                                  onTap: (){
+                                                  onTap: () {
                                                     setState(() {
-                                                      _selectedFilter = categoryTitle;
+                                                      _selectedFilter =
+                                                          categoryTitle;
                                                     });
                                                   },
                                                   child: Container(
                                                     height: 10,
-                                                    constraints: const BoxConstraints(
+                                                    constraints:
+                                                        const BoxConstraints(
                                                       minWidth: 70,
                                                     ),
                                                     decoration: BoxDecoration(
-                                                        borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                                        color: _selectedFilter == categoryTitle ? Colors.white : Colors.white10
-                                                    ),
+                                                        borderRadius:
+                                                            const BorderRadius
+                                                                    .all(
+                                                                Radius.circular(
+                                                                    10)),
+                                                        color: _selectedFilter ==
+                                                                categoryTitle
+                                                            ? Colors.white
+                                                            : Colors.white10),
                                                     child: Padding(
-                                                      padding: const EdgeInsets.only(left: 8.0, right: 8.0),
-                                                      child: CustomText(text: categoryTitle, color: _selectedFilter == categoryTitle ? Colors.black : Colors.white,),
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              left: 8.0,
+                                                              right: 8.0),
+                                                      child: CustomText(
+                                                        text: categoryTitle,
+                                                        color: _selectedFilter ==
+                                                                categoryTitle
+                                                            ? Colors.black
+                                                            : Colors.white,
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
                                               );
-                                            }
-                                        ),
+                                            }),
                                       ),
                                       Padding(
-                                        padding: const EdgeInsets.only(top: 8.0),
+                                        padding:
+                                            const EdgeInsets.only(top: 8.0),
                                         child: SizedBox(
-                                            child: Text("$availableTasks Tasks Found",
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                              ),
-                                            )
-                                        ),
+                                            child: Text(
+                                          "$availableTasks Tasks Found",
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                          ),
+                                        )),
                                       )
-                                    ]
-                                )
-                            ),
+                                    ])),
                           ),
                           Expanded(
                             child: SizedBox(
@@ -782,60 +872,103 @@ class _BrowseState extends State<Browse> {
                               child: SizedBox(
                                 height: 300,
                                 child: StreamBuilder<QuerySnapshot>(
-                                  stream: _selectedFilter != 'All' ? firestore.collection('Tasks').where('user_id', isNotEqualTo: _auth.currentUser!.uid)
-                                      .where('category', isEqualTo: _selectedFilter).where('status', isEqualTo: 'open').snapshots() : firestore.collection('Tasks').where('user_id', isNotEqualTo: _auth.currentUser!.uid)
-                                    .where('status', isEqualTo: 'open').snapshots(),
-                                  builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot){
-                                    if(snapshot.connectionState == ConnectionState.waiting){
+                                  stream: _selectedFilter != 'All'
+                                      ? firestore
+                                          .collection('Tasks')
+                                          .where('user_id',
+                                              isNotEqualTo:
+                                                  _auth.currentUser!.uid)
+                                          .where('category',
+                                              isEqualTo: _selectedFilter)
+                                          .where('status', isEqualTo: 'open')
+                                          .snapshots()
+                                      : firestore
+                                          .collection('Tasks')
+                                          .where('user_id',
+                                              isNotEqualTo:
+                                                  _auth.currentUser!.uid)
+                                          .where('status', isEqualTo: 'open')
+                                          .snapshots(),
+                                  builder: (BuildContext context,
+                                      AsyncSnapshot<QuerySnapshot> snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
                                       return const Center(
                                         child: CircularProgressIndicator(),
                                       );
                                     }
-                                    if(snapshot.hasError){
+                                    if (snapshot.hasError) {
                                       return Center(
                                         child: Text('Error: ${snapshot.error}'),
                                       );
                                     }
-                                    final List<DocumentSnapshot> documents = snapshot.data!.docs;
+                                    final List<DocumentSnapshot> documents =
+                                        snapshot.data!.docs;
                                     availableTasks = documents.length;
                                     return ListView.builder(
                                       itemCount: documents.length,
-                                      itemBuilder: (BuildContext context, int index){
-                                        final Map<String, dynamic> data = documents[index].data() as Map<String, dynamic>;
-                                        markerPositions.add(LatLng(double.parse(data['lat_coordinate']), double.parse(data['lng_coordinate'])));
-                                        void addMarker(lat, long){
-                                            double distance = Geolocator.distanceBetween(
-                                                location.latitude,
-                                                location.longitude,
-                                                double.parse(lat),
-                                                double.parse(long));
-                                            if(distance <= 10 * 1000){
-                                              _markers.add(
-                                                  Marker(
-                                                      markerId: MarkerId(data['Task_id']),
-                                                      position: LatLng(double.parse(lat), double.parse(long)),
-                                                      infoWindow: const InfoWindow(
-                                                        title: 'Offer',
-                                                        snippet: '300',
-                                                      ),
-                                                      onTap: (){
-                                                        Navigator.push(context, MaterialPageRoute(builder: (context)=> TaskBrief(data: data, taskId: '')));
-                                                      }
-                                                  )
-                                              );
-                                            }
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        final Map<String, dynamic> data =
+                                            documents[index].data()
+                                                as Map<String, dynamic>;
+                                        markerPositions.add(LatLng(
+                                            double.parse(
+                                                data['lat_coordinate']),
+                                            double.parse(
+                                                data['lng_coordinate'])));
+                                        void addMarker(lat, long) {
+                                          double distance =
+                                              Geolocator.distanceBetween(
+                                                  location.latitude,
+                                                  location.longitude,
+                                                  double.parse(lat),
+                                                  double.parse(long));
+                                          if (distance <= 10 * 1000) {
+                                            _markers.add(Marker(
+                                                markerId:
+                                                    MarkerId(data['Task_id']),
+                                                position: LatLng(
+                                                    double.parse(lat),
+                                                    double.parse(long)),
+                                                infoWindow: const InfoWindow(
+                                                  title: 'Offer',
+                                                  snippet: '300',
+                                                ),
+                                                onTap: () {
+                                                  Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              TaskBrief(
+                                                                  data: data,
+                                                                  taskId: '')));
+                                                }));
                                           }
-                                          if(location != null){
-                                            addMarker(data['lat_coordinate'], data['lng_coordinate']);
-                                          }
+                                        }
+
+                                        if (location != null) {
+                                          addMarker(data['lat_coordinate'],
+                                              data['lng_coordinate']);
+                                        }
 
                                         return Padding(
-                                          padding: const EdgeInsets.only(bottom: 15.0),
+                                          padding: const EdgeInsets.only(
+                                              bottom: 15.0),
                                           child: GestureDetector(
-                                            onTap: (){
-                                              Navigator.push(context, MaterialPageRoute(builder: (context) => TaskBrief(data: data, taskId: '',)));
+                                            onTap: () {
+                                              Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          TaskBrief(
+                                                            data: data,
+                                                            taskId: '',
+                                                          )));
                                             },
-                                            child: TaskCard(data: data,),
+                                            child: TaskCard(
+                                              data: data,
+                                            ),
                                           ),
                                         );
                                       },
@@ -869,13 +1002,15 @@ class _BrowseState extends State<Browse> {
                                     width: 100,
                                     height: 40,
                                     decoration: const BoxDecoration(
-                                      color: Colors.black,
-                                      borderRadius: BorderRadius.all(Radius.circular(5))
-                                    ),
+                                        color: Colors.black,
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(5))),
                                     child: const Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        Icon(Icons.map_outlined,
+                                        Icon(
+                                          Icons.map_outlined,
                                           color: Colors.white,
                                         ),
                                         CustomText(text: 'Map View')
@@ -896,12 +1031,13 @@ class _BrowseState extends State<Browse> {
                         color: Colors.blueGrey.withOpacity(.9),
                         // color: Colors.pink,
                         child: ListView.builder(
-                          shrinkWrap: true,
+                            shrinkWrap: true,
                             itemCount: filteredList.length,
-                            itemBuilder: (BuildContext context, int index){
-                              if(filteredList.isEmpty){
+                            itemBuilder: (BuildContext context, int index) {
+                              if (filteredList.isEmpty) {
                                 return const Center(
-                                  child: Text('No data',
+                                  child: Text(
+                                    'No data',
                                     style: TextStyle(
                                       fontSize: 16,
                                       color: Colors.white,
@@ -910,11 +1046,14 @@ class _BrowseState extends State<Browse> {
                                 );
                               }
                               return Padding(
-                                padding: const EdgeInsets.only(bottom: 10.0, top: 10.0),
-                                child: TaskCard(data: filteredList[index], backgroundColor: Colors.black45,),
+                                padding: const EdgeInsets.only(
+                                    bottom: 10.0, top: 10.0),
+                                child: TaskCard(
+                                  data: filteredList[index],
+                                  backgroundColor: Colors.black45,
+                                ),
                               );
-                            }
-                        ),
+                            }),
                       ),
                     ),
                   ],
@@ -927,4 +1066,3 @@ class _BrowseState extends State<Browse> {
     );
   }
 }
-

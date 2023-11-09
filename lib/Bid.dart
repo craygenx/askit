@@ -10,7 +10,7 @@ class Bid extends StatefulWidget {
   final String taskId;
   final String postOwner;
   final String taskTitle;
-  final List<String> offers;
+  final List<dynamic> offers;
   const Bid({Key? key, required this.taskId, required this.postOwner, required this.taskTitle, required this.offers}) : super(key: key);
 
   @override

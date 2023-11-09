@@ -37,32 +37,32 @@ class _AlertsState extends State<Alerts> {
         fontSize: 16,
       );
 
-  String formatDate(Timestamp timeStamp){
+  String formatDate(Timestamp timeStamp) {
     final now = Timestamp.now();
     final difference = now.seconds - timeStamp.seconds;
-    if(difference >=86400){
+    if (difference >= 86400) {
       return '${difference ~/ 86400} days ago';
-    }else if(difference >= 3600){
+    } else if (difference >= 3600) {
       return '${difference ~/ 3600} h';
-    }else if(difference >= 60){
+    } else if (difference >= 60) {
       return '${difference ~/ 60} m';
-    }else{
+    } else {
       return 'Just now';
     }
   }
 
-  Future<void> makePayment() async{
-    try{
+  Future<void> makePayment() async {
+    try {
       paymentIntent = await createPaymentIntent('100', 'usd');
-      await Stripe.instance.initPaymentSheet(
-          paymentSheetParameters: SetupPaymentSheetParameters(
-              paymentIntentClientSecret: paymentIntent!['client_secret'],
-              style: ThemeMode.light,
-              merchantDisplayName: 'dennis'
-          )
-      ).then((value) {});
+      await Stripe.instance
+          .initPaymentSheet(
+              paymentSheetParameters: SetupPaymentSheetParameters(
+                  paymentIntentClientSecret: paymentIntent!['client_secret'],
+                  style: ThemeMode.light,
+                  merchantDisplayName: 'dennis'))
+          .then((value) {});
       displayPaymentSheet();
-    }catch(err){
+    } catch (err) {
       throw Exception(err);
     }
   }
@@ -76,34 +76,45 @@ class _AlertsState extends State<Alerts> {
       var response = await http.post(
           Uri.parse('https://api.stripe.com/v1/payment_intents'),
           headers: {
-            'Authorization': 'Bearer sk_test_51Np7gQApX4mRdM7q4bKihv7mlRZd23NZ5MYqUmk82C9EBrePCuwlCCMfHbZysIjY3hFXSoOzWQgtJpHARxsaL1EU00ATEnBx5C',
+            'Authorization':
+                'Bearer sk_test_51Np7gQApX4mRdM7q4bKihv7mlRZd23NZ5MYqUmk82C9EBrePCuwlCCMfHbZysIjY3hFXSoOzWQgtJpHARxsaL1EU00ATEnBx5C',
             'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body: body
-      );
+          body: body);
       return jsonDecode(response.body);
-    }catch(err){
+    } catch (err) {
       throw Exception(err.toString());
     }
   }
+
   String calculateAmount(String amount) {
     return (int.parse(amount) * 100).toString();
   }
 
-  displayPaymentSheet() async{
-    try{
-      await Stripe.instance.presentPaymentSheet().then((value){
+  displayPaymentSheet() async {
+    try {
+      await Stripe.instance.presentPaymentSheet().then((value) {
         paymentIntent = null;
       }).onError((error, stackTrace) {
         throw Exception(error);
       });
-    }
-    on StripeException catch(e){
+    } on StripeException catch (e) {
       showToastMessage('error: $e', Colors.white);
-    }
-    catch (e){
+    } catch (e) {
       showToastMessage('$e', Colors.white);
     }
+  }
+  Future<String> getUsername(uid) async{
+    try{
+      DocumentSnapshot snap = await firestore.collection('users').doc(uid).get();
+      if (snap.exists){
+        Map<String, dynamic> data = snap.data() as Map<String, dynamic>;
+        return '${data['firstName']} ${data['lastName']}';
+      }
+    }catch(e){
+      return 'no user';
+    }
+    return '';
   }
 
   @override
@@ -111,6 +122,7 @@ class _AlertsState extends State<Alerts> {
     // TODO: implement initState
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -125,29 +137,46 @@ class _AlertsState extends State<Alerts> {
               width: MediaQuery.of(context).size.width,
               height: MediaQuery.of(context).size.height,
               child: StreamBuilder<QuerySnapshot>(
-                stream: firestore.collection('Alerts').where('uploadId', isNotEqualTo: _auth.currentUser!.uid).snapshots(),
-                  builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot){
-                    if(snapshot.connectionState == ConnectionState.waiting){
+                  stream: firestore
+                      .collection('Alerts')
+                      .where('uploadId', isNotEqualTo: _auth.currentUser!.uid)
+                      .snapshots(),
+                  builder: (BuildContext context,
+                      AsyncSnapshot<QuerySnapshot> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(
                         child: CircularProgressIndicator(),
                       );
                     }
-                    if(snapshot.hasError){
+                    if (snapshot.hasError) {
                       return Center(
                         child: Text('Error: ${snapshot.error}'),
                       );
                     }
-                    final List<DocumentSnapshot> documents = snapshot.data!.docs;
+                    final List<DocumentSnapshot> documents =
+                        snapshot.data!.docs;
                     return ListView.builder(
                         itemCount: documents.length,
-                        itemBuilder: (BuildContext context, int index){
-                          final Map<String, dynamic> data = documents[index].data() as Map<String, dynamic>;
-                          if(data['alertType'] == 'message' && data['msgReceiver'] == _auth.currentUser!.uid){
+                        itemBuilder: (BuildContext context, int index) {
+                          String receiverNames = '';
+                          final Map<String, dynamic> data =
+                              documents[index].data() as Map<String, dynamic>;
+                          if (data['msgReceiver'] != '' && data['msgReceiver'] != 'no user'){
+                            receiverNames = getUsername(data['msgReceiver']) as String;
+                          }
+                          if (data['alertType'] == 'message' &&
+                              data['msgReceiver'] == _auth.currentUser!.uid) {
                             return Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: GestureDetector(
-                                onTap: (){
-                                  Navigator.push(context, MaterialPageRoute(builder: (context)=>Conversations(receiverId: data['msgSender'], profileName: data['username'],)));
+                                onTap: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => Conversations(
+                                                receiverId: data['msgSender'],
+                                                profileName: receiverNames,
+                                              )));
                                 },
                                 child: Container(
                                   height: 80,
@@ -159,21 +188,35 @@ class _AlertsState extends State<Alerts> {
                                         child: CircleAvatar(),
                                       ),
                                       Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           SizedBox(
                                             width: 300,
                                             child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
-                                                const CustomText(text: 'john  doe', color: Colors.white, fontSize: 16,),
-                                                CustomText(text: formatDate(data['timeStamp'])),
+                                                CustomText(
+                                                  text: receiverNames,
+                                                  color: Colors.white,
+                                                  fontSize: 16,
+                                                ),
+                                                CustomText(
+                                                    text: formatDate(
+                                                        data['timeStamp'])),
                                               ],
                                             ),
                                           ),
-                                          CustomText(text: data['msgBody'], color: Colors.white,)
+                                          CustomText(
+                                            text: data['msgBody'],
+                                            color: Colors.white,
+                                          )
                                         ],
                                       )
                                     ],
@@ -181,53 +224,75 @@ class _AlertsState extends State<Alerts> {
                                 ),
                               ),
                             );
-                          }
-                          else if (data['alertType'] == 'Offer' && data['msgReceiver'] == _auth.currentUser!.uid){
+                          } else if (data['alertType'] == 'Offer' &&
+                              data['msgReceiver'] == _auth.currentUser!.uid) {
                             return Padding(
-                              padding: const EdgeInsets.only(top: 10, bottom: 10),
+                              padding:
+                                  const EdgeInsets.only(top: 10, bottom: 10),
                               child: Container(
-                                decoration: const BoxDecoration(
-                                    color: Colors.white10
-                                ),
+                                decoration:
+                                    const BoxDecoration(color: Colors.white10),
                                 height: 100,
                                 width: MediaQuery.of(context).size.width * 0.95,
                                 child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     SizedBox(
-                                        width: MediaQuery.of(context).size.width * 0.95,
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.95,
                                         child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
                                           children: [
-                                            const CustomText(text: 'Task description'),
-                                            CustomText(text: formatDate(data['timeStamp'])),
+                                            const CustomText(
+                                                text: 'Task description'),
+                                            CustomText(
+                                                text: formatDate(
+                                                    data['timeStamp'])),
                                           ],
                                         )),
                                     // const SizedBox(child: CustomText(text: 'Offer: 300')),
-                                    Text('Offer: ${data['taskBudget']}',
+                                    Text(
+                                      'Offer: ${data['taskBudget']}',
                                       style: const TextStyle(
                                         color: Colors.white,
                                       ),
                                     ),
                                     SizedBox(
-                                      width: MediaQuery.of(context).size.width * 0.95,
+                                      width: MediaQuery.of(context).size.width *
+                                          0.95,
                                       height: 35,
                                       child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
                                         children: [
                                           SizedBox(
                                             child: Row(
                                               children: [
                                                 ElevatedButton(
-                                                    onPressed: (){
-                                                      final DocumentReference documentReference = firestore.collection('Tasks').doc(data['taskId']);
-                                                      documentReference.update({'status': 'closed'})
-                                                          .onError((error, stackTrace){
-                                                        showToastMessage('Error occurred', Colors.white);
+                                                    onPressed: () {
+                                                      final DocumentReference
+                                                          documentReference =
+                                                          firestore
+                                                              .collection(
+                                                                  'Tasks')
+                                                              .doc(data[
+                                                                  'taskId']);
+                                                      documentReference.update({
+                                                        'status': 'closed'
+                                                      }).onError(
+                                                          (error, stackTrace) {
+                                                        showToastMessage(
+                                                            'Error occurred',
+                                                            Colors.white);
                                                       });
                                                       makePayment();
-                                                      showToastMessage('Offer accepted', Colors.white);
+                                                      showToastMessage(
+                                                          'Offer accepted',
+                                                          Colors.white);
                                                     },
                                                     child: const Text('Accept'))
                                               ],
@@ -240,17 +305,24 @@ class _AlertsState extends State<Alerts> {
                                 ),
                               ),
                             );
-                          }else if (data['alertType'] == 'task'){
+                          } else if (data['alertType'] == 'task') {
                             return Padding(
                               padding: const EdgeInsets.all(10.0),
                               child: GestureDetector(
-                                onTap: (){
-                                  Navigator.push(context, MaterialPageRoute(builder: (context)=>TaskBrief(data: const <String, dynamic>{}, taskId: data['taskId'],)));
+                                onTap: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => TaskBrief(
+                                                data: data,
+                                                taskId: data['taskId'],
+                                              )));
                                 },
                                 child: Container(
                                   height: 120,
                                   decoration: const BoxDecoration(
-                                    borderRadius: BorderRadius.all(Radius.circular(15)),
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(15)),
                                     color: Colors.white10,
                                   ),
                                   child: Row(
@@ -260,36 +332,59 @@ class _AlertsState extends State<Alerts> {
                                         child: SizedBox(
                                           width: 45,
                                           height: 35,
-                                          child: Image.asset(data['taskUrl'], fit: BoxFit.cover,),
+                                          child: Image.asset(
+                                            data['taskUrl'],
+                                            fit: BoxFit.cover,
+                                          ),
                                         ),
                                       ),
                                       Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
                                         children: [
                                           SizedBox(
                                             height: 20,
                                             width: 300,
                                             child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
-                                                SizedBox(child: CustomText(text: data['taskTitle'], fontSize: 16,)),
-                                                SizedBox(child: CustomText(text: formatDate(data['timeStamp']), fontSize: 14,))
+                                                SizedBox(
+                                                    child: CustomText(
+                                                  text: data['taskTitle'],
+                                                  fontSize: 16,
+                                                )),
+                                                SizedBox(
+                                                    child: CustomText(
+                                                  text: formatDate(
+                                                      data['timeStamp']),
+                                                  fontSize: 14,
+                                                ))
                                               ],
                                             ),
                                           ),
                                           SizedBox(
                                             width: 240,
-                                            child: Text(data['taskDescription'],
+                                            child: Text(
+                                              data['taskDescription'],
                                               overflow: TextOverflow.ellipsis,
                                               style: const TextStyle(
-                                                  color: Colors.grey
-                                              ),
+                                                  color: Colors.grey),
                                             ),
                                           ),
-                                          CustomText(text: data['taskDueDate'], color: Colors.grey,),
-                                          const CustomText(text: 'Budget: 600', fontSize: 16,)
+                                          CustomText(
+                                            text: data['taskDueDate'],
+                                            color: Colors.grey,
+                                          ),
+                                          const CustomText(
+                                            text: 'Budget: 600',
+                                            fontSize: 16,
+                                          )
                                         ],
                                       )
                                     ],
@@ -297,11 +392,9 @@ class _AlertsState extends State<Alerts> {
                                 ),
                               ),
                             );
-                          }else{
+                          } else {
                             return const Visibility(
-                              visible: false,
-                                child: Text('')
-                            );
+                                visible: false, child: Text(''));
                           }
                           // }else{
                           //   return Padding(
@@ -363,10 +456,8 @@ class _AlertsState extends State<Alerts> {
                           //     ),
                           //   );
                           // }
-                        }
-                    );
-                  }
-              ),
+                        });
+                  }),
             ),
           ),
         ),
@@ -374,6 +465,7 @@ class _AlertsState extends State<Alerts> {
     );
   }
 }
+
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({Key? key}) : super(key: key);
 

@@ -9,6 +9,7 @@ import 'MessageModel.dart';
 class TaskModel {
   String? user_id;
   String username;
+  String price;
   String status;
   String Task_id;
   String title;
@@ -40,6 +41,7 @@ class TaskModel {
         required this.username,
         required this.status,
         required this.Task_id,
+        required this.price,
         required this.country,
         required this.lng_coordinate,
         required this.lat_coordinate,
@@ -71,6 +73,7 @@ class TaskModel {
         username: data['username'],
         status: data['status'],
         Task_id: data['Task_id'],
+        price: data['price'],
         title: data['title'],
         description: data['description'],
         requirements: data['requirements'],
@@ -104,6 +107,7 @@ class TaskModel {
       'username': username,
       'status': status,
       'Task_id': Task_id,
+      'price': price,
       'title': title,
       'description': description,
       'requirements': requirements,

@@ -27,9 +27,10 @@ import 'package:geolocator/geolocator.dart';
 const kGoogleApiKey = "AIzaSyDMeqRZlxa8ZRBtuz4FkS9S0iZ8H3T1Bb0";
 
 class Post extends StatefulWidget {
-  final String? category;
+  String? category;
   final String? selectedIcon;
-  const Post({Key? key, required this.category, this.selectedIcon}) : super(key: key);
+  Post({Key? key, required this.category, this.selectedIcon})
+      : super(key: key);
 
   @override
   State<Post> createState() => _PostState();
@@ -37,8 +38,8 @@ class Post extends StatefulWidget {
 
 class _PostState extends State<Post> {
   late User? user;
-  String _inputText = '';
-  String? _selectedItem;
+  // String _inputText = '';
+  // String? _selectedItem;
   late String username;
   bool isLoading = false;
   var uuid = const Uuid();
@@ -46,14 +47,67 @@ class _PostState extends State<Post> {
   String? _jobType = 'in-person';
   bool _timeFlexible = false;
   bool _flexible = false;
-  final List<String> _dropDownItems = ['one', 'two', 'three'];
+  final List<String> _dropDownItems = [
+    'Chandigarh',
+    'Chennai',
+    'Pune',
+    'Madurai',
+    'Ahmedabad',
+    'Hyderabad',
+    'Lucknow',
+    'Bengaluru',
+    'Kolkata',
+    'Jodhpur',
+    'Surat',
+    'Nagpur',
+    'Mumbai',
+    'Kanpur',
+    'Punducherry',
+    'Vadodara',
+    'Visakhapatnam',
+    'Udaipur',
+    'Jamshedpur',
+    'Jaipur',
+    'Coimbatore',
+    'Pali',
+    'Thrissur',
+    'Muzzaffarpur',
+    'Nashik',
+    'Kollam',
+    'Dhanbad',
+    'Bidhannagar',
+    'Bhalswa Jahangir Village',
+    'Mysuru',
+    'Bhopal',
+    'Amritsar',
+    'Kochi',
+    'Kozhikode',
+    'Tiruppur',
+    'Varanasi',
+    'Kurnool',
+    'Aurangabad',
+    'Thane',
+    'Ranchi',
+    'Alwar',
+    'Mangaluru',
+    'Thiruvananthapuram',
+    'Rajkot',
+    'Gwalior',
+    'Durgapur',
+    'Agra',
+    'Dehradun',
+    'Jabalpur',
+    'Vijayawada',
+    'Rajamahendravaram'
+  ];
   List<String> userTokens = [];
   List<XFile> selectedImages = [];
   List imagePaths = [];
   String? videoFile = '';
-  late String vidUrl;
+  String vidUrl = '';
   String? _selectedTimeOfDay;
-  final FlutterLocalNotificationsPlugin  notificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
   late Future<QuerySnapshot> collectionSnapshot;
   final TextEditingController _taskTitle = TextEditingController();
   final TextEditingController _taskDescription = TextEditingController();
@@ -64,17 +118,22 @@ class _PostState extends State<Post> {
   final TextEditingController _beforeDate = TextEditingController();
   //maps
   GoogleMapsPlaces googlePlaces = GoogleMapsPlaces(apiKey: kGoogleApiKey);
-  final firestoreInstance = FirebaseFirestore.instance;  // handling all firestore collection
+  final firestoreInstance =
+      FirebaseFirestore.instance; // handling all firestore collection
   final FirebaseAuth auth = FirebaseAuth.instance;
-  final storage = FirebaseStorage.instance;  // for saving media in firebase storage
-  final picker = ImagePicker();  // for picking image in phone gallery
+  final storage =
+      FirebaseStorage.instance; // for saving media in firebase storage
+  final picker = ImagePicker(); // for picking image in phone gallery
   late LatLng _initialPosition;
   DateTime firstDate = DateTime.now();
   bool isFirstSelected = false;
   final Set<Marker> _markers = {};
   final Set<Circle> _circles = {};
+  double newLat = 0.0;
+  double newLng = 0.0;
   String? address;
-  final Completer<GoogleMapController> _controller = Completer<GoogleMapController>();
+  final Completer<GoogleMapController> _controller =
+      Completer<GoogleMapController>();
   File? photo;
   bool signedAsProvider = false, showCompletedTasks = false;
   num rating = 0;
@@ -105,20 +164,24 @@ class _PostState extends State<Post> {
     getUsername();
   }
 
-  getUsername() async{
-    try{
-      DocumentSnapshot snap = await firestoreInstance.collection('users').doc(auth.currentUser!.uid).get();
-      if (snap.exists){
+  getUsername() async {
+    try {
+      DocumentSnapshot snap = await firestoreInstance
+          .collection('users')
+          .doc(auth.currentUser!.uid)
+          .get();
+      if (snap.exists) {
         Map<String, dynamic> data = snap.data() as Map<String, dynamic>;
         setState(() {
           username = '${data['firstName']} ${data['lastName']}';
         });
       }
-    }catch(e){
+    } catch (e) {
       return;
     }
   }
-  void requestPermission() async{
+
+  void requestPermission() async {
     FirebaseMessaging messaging = FirebaseMessaging.instance;
     NotificationSettings settings = await messaging.requestPermission(
       alert: true,
@@ -129,90 +192,102 @@ class _PostState extends State<Post> {
       provisional: false,
       sound: true,
     );
-    if(settings.authorizationStatus == AuthorizationStatus.authorized){
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
       return;
-    }else if(settings.authorizationStatus == AuthorizationStatus.provisional){
+    } else if (settings.authorizationStatus ==
+        AuthorizationStatus.provisional) {
       return;
-    }else{
+    } else {
       showToastMessage('access denied', Colors.white);
     }
   }
-  initInfo(){
-    var androidInitialize = const AndroidInitializationSettings('@mipmap/ic_launcher');
-    DarwinInitializationSettings initializationIos = DarwinInitializationSettings(
+
+  initInfo() {
+    var androidInitialize =
+        const AndroidInitializationSettings('@mipmap/ic_launcher');
+    DarwinInitializationSettings initializationIos =
+        DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
-      onDidReceiveLocalNotification: (id, title, body, payload){},
+      onDidReceiveLocalNotification: (id, title, body, payload) {},
     );
-    var initializationsSettings = InitializationSettings(android: androidInitialize, iOS: initializationIos);
-    notificationsPlugin.initialize(initializationsSettings, onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async{
-      try{
-        if(notificationResponse.payload != null && notificationResponse.payload!.isNotEmpty){
+    var initializationsSettings = InitializationSettings(
+        android: androidInitialize, iOS: initializationIos);
+    notificationsPlugin.initialize(initializationsSettings,
+        onDidReceiveNotificationResponse:
+            (NotificationResponse notificationResponse) async {
+      try {
+        if (notificationResponse.payload != null &&
+            notificationResponse.payload!.isNotEmpty) {
           // Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) {
           //   return const Conversations(receiverId: '', profileName: '');
           // }));
-        }else{}
-      }catch(e){
+        } else {}
+      } catch (e) {
         return;
       }
     });
   }
-  void sendPushMessage(String token, String body, String title) async{
-    try{
+
+  void sendPushMessage(String token, String body, String title) async {
+    try {
       await http.post(
-          Uri.parse('https://fcm.googleapis.com/v1/projects/askit-5ff8c/messages:send HTTP/1.1'),
+          Uri.parse(
+              'https://fcm.googleapis.com/v1/projects/askit-5ff8c/messages:send HTTP/1.1'),
           headers: <String, String>{
             'Content-Type': "application/json",
             'Authorization': "Bearer 60693c26c90360664fbaade6b5ea2b003aa2c16f"
           },
-          body: jsonEncode(
-              <String, dynamic>{
-                'priority': 'high',
-                'data':<String, dynamic>{
-                  'click_action': 'FLUTTER_NOTIFICATION_CLICK',
-                  'status': 'done',
-                  'body': body,
-                  'title':title,
-                },
-                "message":{
-                  "tokens":userTokens,
-                  "notification":{
-                    'title':title,
-                    'body':body,
-                    "android_channel_id": "sentMessage"
-                  }
-                },
+          body: jsonEncode(<String, dynamic>{
+            'priority': 'high',
+            'data': <String, dynamic>{
+              'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+              'status': 'done',
+              'body': body,
+              'title': title,
+            },
+            "message": {
+              "tokens": userTokens,
+              "notification": {
+                'title': title,
+                'body': body,
+                "android_channel_id": "sentMessage"
               }
-          )
-      );
-    }catch(e){
+            },
+          }));
+    } catch (e) {
       showToastMessage('$e', Colors.red);
     }
   }
 
-  void grantLocationPermission() async{
+  void grantLocationPermission() async {
     bool serviceEnabled;
     LocationPermission permission;
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if(!serviceEnabled){
-      if(context.mounted) ScaffoldMessenger.of(context).showSnackBar( const SnackBar(content:Text('Location services are disabled')));
+    if (!serviceEnabled) {
+      if (context.mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location services are disabled')));
     }
     permission = await Geolocator.checkPermission();
-    if(permission == LocationPermission.denied){
+    if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if(permission == LocationPermission.denied){
-
-        if(context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Location permissions are denied')));
+      if (permission == LocationPermission.denied) {
+        if (context.mounted)
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Location permissions are denied')));
       }
     }
-    if(permission == LocationPermission.deniedForever){
-
-      if(context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Location permissions are permanently denied, we cannot request permissions')));
+    if (permission == LocationPermission.deniedForever) {
+      if (context.mounted)
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+                'Location permissions are permanently denied, we cannot request permissions')));
     }
   }
 
-  Future<void> _showAutoComplete() async{
+  Future<void> _showAutoComplete() async {
     Prediction? p = await PlacesAutocomplete.show(
         context: context,
         apiKey: kGoogleApiKey,
@@ -222,57 +297,55 @@ class _PostState extends State<Post> {
         mode: Mode.overlay,
         types: [],
         strictbounds: false,
-        decoration: const InputDecoration(
-            hintText: 'street, building, town...'
-        ),
-        components: [Component(Component.country, "in")]
-    );
+        decoration:
+            const InputDecoration(hintText: 'street, building, town...'),
+        components: [Component(Component.country, "in")]);
     displayPrediction(p!);
   }
 
-  Future<void> displayPrediction(Prediction? prediction) async{
+  Future<void> displayPrediction(Prediction? prediction) async {
     if (prediction != null) {
       GoogleMapsPlaces googlePlaces = GoogleMapsPlaces(
         apiKey: kGoogleApiKey,
         apiHeaders: await const GoogleApiHeaders().getHeaders(),
       );
-      PlacesDetailsResponse detail = await googlePlaces.getDetailsByPlaceId(prediction.placeId!);
-      final lat = detail.result.geometry?.location.lat;  // latitude from the chosen address
-      final lng = detail.result.geometry?.location.lng;  // longitude from the picked address
+      PlacesDetailsResponse detail =
+          await googlePlaces.getDetailsByPlaceId(prediction.placeId!);
+      final lat = detail
+          .result.geometry?.location.lat; // latitude from the chosen address
+      final lng = detail
+          .result.geometry?.location.lng; // longitude from the picked address
       var mapAddress = prediction.description!; // name of the address
 
       setState(() {
         _initialPosition = LatLng(lat!, lng!);
         address = mapAddress;
+        newLat = lat;
+        newLng = lng;
         _completeAddress.text = mapAddress;
         _markers.add(
-            Marker(
-                markerId: MarkerId(mapAddress),
-                position: LatLng(lat, lng)
-            )
-        );
-        _circles.add(
-            Circle(
-                circleId: CircleId(mapAddress),
-                center: LatLng(lat, lng),
-                radius: 500,
-                fillColor: Colors.blue.withOpacity(0.4),
-                strokeWidth: 2,
-                strokeColor: Colors.blue
-            )
-        );
-      });  // updated coordinates and address
+            Marker(markerId: MarkerId(mapAddress), position: LatLng(lat, lng)));
+        _circles.add(Circle(
+            circleId: CircleId(mapAddress),
+            center: LatLng(lat, lng),
+            radius: 500,
+            fillColor: Colors.blue.withOpacity(0.4),
+            strokeWidth: 2,
+            strokeColor: Colors.blue));
+      }); // updated coordinates and address
     }
   }
 
-  void onError(PlacesAutocompleteResponse response){
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text(response.errorMessage!)));
+  void onError(PlacesAutocompleteResponse response) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(response.errorMessage!)));
   }
 
-  void showAddressMap(){
-    if(address == null){
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No address chosen')));
-    } else{
+  void showAddressMap() {
+    if (address == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('No address chosen')));
+    } else {
       showGeneralDialog(
           context: context,
           pageBuilder: ((context, animation, secondaryAnimation) {
@@ -281,42 +354,45 @@ class _PostState extends State<Post> {
                 backgroundColor: Colors.black,
                 leading: MaterialButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Icon(CommunityMaterialIcons.chevron_left, color: Colors.white, size: 20),
+                  child: const Icon(CommunityMaterialIcons.chevron_left,
+                      color: Colors.white, size: 20),
                 ),
                 centerTitle: true,
-                title: Text('$address', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),),
+                title: Text(
+                  '$address',
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w700),
+                ),
               ),
               body: Stack(
                 children: [
                   Positioned.fill(
                       child: GoogleMap(
-                        mapType: MapType.normal,
-                        zoomGesturesEnabled: false,
-                        myLocationEnabled: false,
-                        myLocationButtonEnabled: false,
-                        initialCameraPosition: CameraPosition(
-                            target: _initialPosition,
-                            zoom: 16,
-                            tilt: 80,
-                            bearing: 30
-                        ),
-                        onMapCreated: (GoogleMapController controller) => _controller.complete(controller),
-                        markers: _markers,
-                        circles: _circles,
-                      )
-                  )
+                    mapType: MapType.normal,
+                    zoomGesturesEnabled: false,
+                    myLocationEnabled: false,
+                    myLocationButtonEnabled: false,
+                    initialCameraPosition: CameraPosition(
+                        target: _initialPosition,
+                        zoom: 16,
+                        tilt: 80,
+                        bearing: 30),
+                    onMapCreated: (GoogleMapController controller) =>
+                        _controller.complete(controller),
+                    markers: _markers,
+                    circles: _circles,
+                  ))
                 ],
               ),
             );
-          })
-      );
+          }));
     }
   }
 
-  Future<void> _pickVideo() async{
+  Future<void> _pickVideo() async {
     final imagePicker = ImagePicker();
     final pickedFile = await imagePicker.pickVideo(source: ImageSource.gallery);
-    if(pickedFile != null){
+    if (pickedFile != null) {
       setState(() {
         videoFile = pickedFile.path;
       });
@@ -338,43 +414,47 @@ class _PostState extends State<Post> {
       }
     });
   }
-  Future<void> _storeImages(List<XFile> images) async{
-    for(int i = 0; i<images.length; i++){
+
+  Future<void> _storeImages(List<XFile> images) async {
+    for (int i = 0; i < images.length; i++) {
       final imagePath = File(images[i].path);
       final imageName = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      try{
-        TaskSnapshot uploadTask = await storage.ref().child('images/$imageName').putFile(imagePath);
+      try {
+        TaskSnapshot uploadTask =
+            await storage.ref().child('images/$imageName').putFile(imagePath);
         String imgUrl = await uploadTask.ref.getDownloadURL();
         imagePaths.add(imgUrl);
-      }catch(error){
+      } catch (error) {
         showToastMessage('$error', Colors.red);
       }
     }
   }
 
-  Future<void> _storeVideo() async{
-    final String videoName = 'video_${DateTime.now().millisecondsSinceEpoch}.mp4';
-    try{
-      TaskSnapshot uploadTask = await storage.ref().child('videos/$videoName').putFile(File(videoFile!));
+  Future<void> _storeVideo() async {
+    final String videoName =
+        'video_${DateTime.now().millisecondsSinceEpoch}.mp4';
+    try {
+      TaskSnapshot uploadTask = await storage
+          .ref()
+          .child('videos/$videoName')
+          .putFile(File(videoFile!));
       final String videoUrl = await uploadTask.ref.getDownloadURL();
       vidUrl = videoUrl;
-    }catch(error){
+    } catch (error) {
       showToastMessage('Error uploading video', Colors.red);
     }
   }
 
-  String? validateInput(String? value){
-    if(value == null || value.isEmpty){
+  String? validateInput(String? value) {
+    if (value == null || value.isEmpty) {
       return 'Field cannot be empty';
     }
     List<String>? words = value.split(' ');
-    if(words.length > 10){
+    if (words.length > 10) {
       return 'Maximum 10 characters allowed';
     }
     return null;
   }
-
-
 
   void showToastMessage(String message, Color textColor) =>
       Fluttertoast.showToast(
@@ -389,7 +469,7 @@ class _PostState extends State<Post> {
 
   @override
   Widget build(BuildContext context) {
-    SizedBox screen1(){
+    SizedBox screen1() {
       return SizedBox(
         width: MediaQuery.of(context).size.width,
         child: Column(
@@ -408,8 +488,8 @@ class _PostState extends State<Post> {
                           children: [
                             Text(
                               'Give a Title to your task',
-                              style: TextStyle(
-                                  fontSize: 16, color: Colors.white),
+                              style:
+                                  TextStyle(fontSize: 16, color: Colors.white),
                             ),
                             CustomText(text: 'Minimum 10 characters')
                           ],
@@ -453,7 +533,7 @@ class _PostState extends State<Post> {
                           maxLines: 4,
                           controller: _taskDescription,
                           hintText:
-                          'Add more detailed description about the task and how you want it done'),
+                              'Add more detailed description about the task and how you want it done'),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10.0),
@@ -474,7 +554,8 @@ class _PostState extends State<Post> {
         ),
       );
     }
-    SizedBox screen2(){
+
+    SizedBox screen2() {
       return SizedBox(
         width: MediaQuery.of(context).size.width,
         child: Column(
@@ -499,16 +580,19 @@ class _PostState extends State<Post> {
                         width: MediaQuery.of(context).size.width * .35,
                         height: 35,
                         decoration: BoxDecoration(
-                            color: _jobType == 'in-person' ? Colors.grey : Colors.transparent,
+                            color: _jobType == 'in-person'
+                                ? Colors.grey
+                                : Colors.transparent,
                             borderRadius:
-                            const BorderRadius.all(Radius.circular(10))),
+                                const BorderRadius.all(Radius.circular(10))),
                         child: Center(
                           child: Text(
                             'In-Person',
                             style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: _jobType == 'in-person' ? Colors.black : Colors.white
-                            ),
+                                color: _jobType == 'in-person'
+                                    ? Colors.black
+                                    : Colors.white),
                           ),
                         ),
                       ),
@@ -523,15 +607,19 @@ class _PostState extends State<Post> {
                         height: 35,
                         width: MediaQuery.of(context).size.width * .35,
                         decoration: BoxDecoration(
-                            color: _jobType == 'remote' ? Colors.grey : Colors.transparent,
+                            color: _jobType == 'remote'
+                                ? Colors.grey
+                                : Colors.transparent,
                             borderRadius:
-                            const BorderRadius.all(Radius.circular(10))),
+                                const BorderRadius.all(Radius.circular(10))),
                         child: Center(
-                          child: Text('Remotely',
+                          child: Text(
+                            'Remotely',
                             style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: _jobType == 'remote' ? Colors.black : Colors.white
-                            ),
+                                color: _jobType == 'remote'
+                                    ? Colors.black
+                                    : Colors.white),
                           ),
                         ),
                       ),
@@ -559,7 +647,7 @@ class _PostState extends State<Post> {
                       items: categories,
                       onChanged: (value) {
                         setState(() {
-                          _selectedItem = value;
+                          widget.category = value;
                         });
                       },
                       iconImage: 'assets/taskIcons/Group.png',
@@ -586,7 +674,7 @@ class _PostState extends State<Post> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         GestureDetector(
-                          onTap: ()=>_pickImages(),
+                          onTap: () => _pickImages(),
                           child: Container(
                             color: Colors.white12,
                             height: 150,
@@ -595,24 +683,28 @@ class _PostState extends State<Post> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 SizedBox(
-                                  child: selectedImages.isNotEmpty ? Image.asset(
-                                      'assets/taskIcons/Group 2347.png'): Row(
-                                    children: selectedImages.map((asset) => Container(
-                                      width: 50,
-                                      height: 50,
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        // image: DecorationImage(
-                                        //   fit: BoxFit.cover,
-                                        //   image: AssetImage(asset as String,),
-                                        // )
-                                      ),
-                                    )).toList(),
-                                  )
-                                ),
+                                    child: selectedImages.isNotEmpty
+                                        ? Image.asset(
+                                            'assets/taskIcons/Group 2347.png')
+                                        : Row(
+                                            children: selectedImages
+                                                .map((asset) => Container(
+                                                      width: 50,
+                                                      height: 50,
+                                                      decoration:
+                                                          const BoxDecoration(
+                                                        shape: BoxShape.circle,
+                                                        // image: DecorationImage(
+                                                        //   fit: BoxFit.cover,
+                                                        //   image: AssetImage(asset as String,),
+                                                        // )
+                                                      ),
+                                                    ))
+                                                .toList(),
+                                          )),
                                 const Text(
                                   'Add up to 5 images of 1MB'
-                                      ' each',
+                                  ' each',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(color: Colors.grey),
                                 ),
@@ -621,7 +713,7 @@ class _PostState extends State<Post> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: ()=>_pickVideo(),
+                          onTap: () => _pickVideo(),
                           child: Container(
                             color: Colors.white12,
                             height: 150,
@@ -630,10 +722,11 @@ class _PostState extends State<Post> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 SizedBox(
-                                    child: Image.asset('assets/taskIcons/Group 2350.png')),
+                                    child: Image.asset(
+                                        'assets/taskIcons/Group 2350.png')),
                                 const Text(
                                   'Add up to 1 video not more than'
-                                      ' 10MB',
+                                  ' 10MB',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(color: Colors.grey),
                                 )
@@ -672,38 +765,39 @@ class _PostState extends State<Post> {
                               setState(() {
                                 _selectedCity = value;
                               });
-                            }
-                            ),
+                            }),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 10.0),
-                        child: InkWell(
-                          onTap: (){
-                            _showAutoComplete();
-                          },
-                          child: Container(
-                            height: 50,
-                            width: MediaQuery.of(context).size.width * .95,
-                            decoration: const BoxDecoration(
-                              color: Colors.white38,
-                              borderRadius: BorderRadius.all(Radius.circular(10))
-                            ),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 8.0),
-                                child: Text(address != null ? _completeAddress.text : 'Add complete task address here',
+                          padding: const EdgeInsets.only(bottom: 10.0),
+                          child: InkWell(
+                            onTap: () {
+                              _showAutoComplete();
+                            },
+                            child: Container(
+                              height: 50,
+                              width: MediaQuery.of(context).size.width * .95,
+                              decoration: const BoxDecoration(
+                                  color: Colors.white38,
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(10))),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 8.0),
+                                  child: Text(
+                                    address != null
+                                        ? _completeAddress.text
+                                        : 'Add complete task address here',
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          // child: CustomTextField(
-                          //     width: MediaQuery.of(context).size.width * .95,
-                          //     maxLines: 3,
-                          //     controller: _completeAddress,
-                          //     hintText: 'Add complete task address here'),
-                        )
-                      ),
+                            // child: CustomTextField(
+                            //     width: MediaQuery.of(context).size.width * .95,
+                            //     maxLines: 3,
+                            //     controller: _completeAddress,
+                            //     hintText: 'Add complete task address here'),
+                          )),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -744,7 +838,8 @@ class _PostState extends State<Post> {
         ),
       );
     }
-    SizedBox screen3(){
+
+    SizedBox screen3() {
       return SizedBox(
         width: MediaQuery.of(context).size.width,
         child: Column(
@@ -767,9 +862,17 @@ class _PostState extends State<Post> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         CustomDatePicker(
-                            hint: 'On Date', controller: _onDate, firstSelection: DateTime.now(), isFirstSelect: isFirstSelected,),
+                          hint: 'On Date',
+                          controller: _onDate,
+                          firstSelection: DateTime.now(),
+                          isFirstSelect: isFirstSelected,
+                        ),
                         CustomDatePicker(
-                            hint: 'Before Date', controller: _beforeDate, firstSelection: firstDate, isFirstSelect: isFirstSelected,)
+                          hint: 'Before Date',
+                          controller: _beforeDate,
+                          firstSelection: firstDate,
+                          isFirstSelect: isFirstSelected,
+                        )
                       ],
                     ),
                     Padding(
@@ -779,7 +882,7 @@ class _PostState extends State<Post> {
                         decoration: const BoxDecoration(
                             color: Colors.white10,
                             borderRadius:
-                            BorderRadius.all(Radius.circular(20))),
+                                BorderRadius.all(Radius.circular(20))),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -822,7 +925,7 @@ class _PostState extends State<Post> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       GestureDetector(
-                        onTap: (){
+                        onTap: () {
                           setState(() {
                             _selectedTimeOfDay = 'morning';
                           });
@@ -830,12 +933,14 @@ class _PostState extends State<Post> {
                         child: Container(
                           decoration: BoxDecoration(
                             color: Colors.white12,
-                            borderRadius:
-                            const BorderRadius.all(Radius.circular(10),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(10),
                             ),
-                            border: _selectedTimeOfDay == 'morning' ? Border.all(
-                              color: Colors.white,
-                            ) : null,
+                            border: _selectedTimeOfDay == 'morning'
+                                ? Border.all(
+                                    color: Colors.white,
+                                  )
+                                : null,
                           ),
                           height: 100,
                           width: 100,
@@ -852,7 +957,7 @@ class _PostState extends State<Post> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: (){
+                        onTap: () {
                           setState(() {
                             _selectedTimeOfDay = 'midday';
                           });
@@ -860,12 +965,14 @@ class _PostState extends State<Post> {
                         child: Container(
                           decoration: BoxDecoration(
                             color: Colors.white12,
-                            borderRadius:
-                            const BorderRadius.all(Radius.circular(10),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(10),
                             ),
-                            border: _selectedTimeOfDay == 'midday' ? Border.all(
-                              color: Colors.white,
-                            ) : null,
+                            border: _selectedTimeOfDay == 'midday'
+                                ? Border.all(
+                                    color: Colors.white,
+                                  )
+                                : null,
                           ),
                           height: 100,
                           width: 100,
@@ -873,8 +980,8 @@ class _PostState extends State<Post> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               SizedBox(
-                                child: Image.asset(
-                                    'assets/taskIcons/Vector.png'),
+                                child:
+                                    Image.asset('assets/taskIcons/Vector.png'),
                               ),
                               const CustomText(text: '11 am - 4 pm')
                             ],
@@ -882,7 +989,7 @@ class _PostState extends State<Post> {
                         ),
                       ),
                       GestureDetector(
-                        onTap: (){
+                        onTap: () {
                           setState(() {
                             _selectedTimeOfDay = 'evening';
                           });
@@ -890,12 +997,14 @@ class _PostState extends State<Post> {
                         child: Container(
                           decoration: BoxDecoration(
                             color: Colors.white12,
-                            borderRadius:
-                            const BorderRadius.all(Radius.circular(10),
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(10),
                             ),
-                            border: _selectedTimeOfDay == 'evening' ? Border.all(
-                              color: Colors.white,
-                            ) : null,
+                            border: _selectedTimeOfDay == 'evening'
+                                ? Border.all(
+                                    color: Colors.white,
+                                  )
+                                : null,
                           ),
                           height: 100,
                           width: 100,
@@ -919,8 +1028,7 @@ class _PostState extends State<Post> {
                       width: MediaQuery.of(context).size.width * .95,
                       decoration: const BoxDecoration(
                           color: Colors.white10,
-                          borderRadius:
-                          BorderRadius.all(Radius.circular(20))),
+                          borderRadius: BorderRadius.all(Radius.circular(20))),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -956,11 +1064,11 @@ class _PostState extends State<Post> {
                 setState(() {
                   isLoading = true;
                 });
-                if(selectedImages.isNotEmpty){
+                if (selectedImages.isNotEmpty) {
                   await _storeImages(selectedImages);
                 }
-                if(videoFile != ''){
-                 await _storeVideo();
+                if (videoFile != '') {
+                  await _storeVideo();
                 }
                 var taskUuid = uuid.v1();
                 TaskModel taskModel = TaskModel(
@@ -968,6 +1076,7 @@ class _PostState extends State<Post> {
                     title: _taskTitle.text,
                     status: 'open',
                     Task_id: taskUuid,
+                    price: _bugetController.text,
                     description: _taskDescription.text,
                     requirements: _taskRequirement.text,
                     category: widget.category!,
@@ -982,9 +1091,9 @@ class _PostState extends State<Post> {
                     preferred_time: _selectedTimeOfDay!,
                     flexible_date: _timeFlexible,
                     country: '',
-                    lng_coordinate: '',
-                    lat_coordinate: '',
-                    provider_id: '',
+                    lng_coordinate: newLng.toString(),
+                    lat_coordinate: newLat.toString(),
+                    provider_id: user?.uid ?? '',
                     on_date_formatted: DateTime.now(),
                     png_icon: widget.selectedIcon!,
                     task_type: _jobType!,
@@ -993,13 +1102,28 @@ class _PostState extends State<Post> {
                     username: username);
                 Map<String, dynamic> dataMap = taskModel.toMap();
                 await FirebaseFirestore.instance
-                    .collection("Tasks").doc(taskUuid).set(dataMap);
-                AlertModel alertModel = AlertModel(alertType: 'task', taskTitle: _taskTitle.text, address: '',
-                    taskBudget: '', timeStamp: DateTime.now(), taskId: taskUuid, msgSender: '',
-                    msgBody: '', msgReceiver: '', taskDescription: _taskDescription.text, taskDueDate: _onDate.text,
-                    uploadId: auth.currentUser!.uid, taskUrl: widget.selectedIcon!, username: '');
+                    .collection("Tasks")
+                    .doc(taskUuid)
+                    .set(dataMap);
+                AlertModel alertModel = AlertModel(
+                    alertType: 'task',
+                    taskTitle: _taskTitle.text,
+                    address: '',
+                    taskBudget: '',
+                    timeStamp: DateTime.now(),
+                    taskId: taskUuid,
+                    msgSender: '',
+                    msgBody: '',
+                    msgReceiver: '',
+                    taskDescription: _taskDescription.text,
+                    taskDueDate: _onDate.text,
+                    uploadId: auth.currentUser!.uid,
+                    taskUrl: widget.selectedIcon!,
+                    username: '');
                 Map<String, dynamic> alertData = alertModel.toMap();
-                await FirebaseFirestore.instance.collection('Alerts').add(alertData);
+                await FirebaseFirestore.instance
+                    .collection('Alerts')
+                    .add(alertData);
                 _completeAddress.clear();
                 _taskDescription.clear();
                 _taskTitle.clear();
@@ -1019,15 +1143,17 @@ class _PostState extends State<Post> {
                       color: Colors.white,
                       borderRadius: BorderRadius.all(Radius.circular(10))),
                   child: Center(
-                    child: isLoading ? const CircularProgressIndicator(): const Text(
-                      'Continue',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                        fontSize: 16,
-                      ),
-                    ),
+                    child: isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text(
+                            'Continue',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                              fontSize: 16,
+                            ),
+                          ),
                   ),
                 ),
               ),
@@ -1036,11 +1162,8 @@ class _PostState extends State<Post> {
         ),
       );
     }
-    final List<Widget> pages = [
-      screen1(),
-      screen2(),
-      screen3()
-    ];
+
+    final List<Widget> pages = [screen1(), screen2(), screen3()];
     int currentPage = 0;
     return Scaffold(
       backgroundColor: Colors.black,
@@ -1077,24 +1200,24 @@ class _PostState extends State<Post> {
             child: SizedBox(
               width: MediaQuery.of(context).size.width,
               child: GestureDetector(
-                onHorizontalDragEnd: (details){
-                  if(details.primaryVelocity! > 0){
-                    if(currentPage > 0){
+                onHorizontalDragEnd: (details) {
+                  if (details.primaryVelocity! > 0) {
+                    if (currentPage > 0) {
                       setState(() {
-                        currentPage --;
+                        currentPage--;
                       });
                     }
-                  }else if(details.primaryVelocity! < 0){
-                    if(currentPage < pages.length-1){
+                  } else if (details.primaryVelocity! < 0) {
+                    if (currentPage < pages.length - 1) {
                       setState(() {
-                        currentPage ++;
+                        currentPage++;
                       });
                     }
                   }
                 },
                 child: PageView(
                   children: pages,
-                  onPageChanged: (index){
+                  onPageChanged: (index) {
                     setState(() {
                       currentPage = index;
                       indIndex = index;
@@ -1109,7 +1232,6 @@ class _PostState extends State<Post> {
     );
   }
 }
-
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({Key? key}) : super(key: key);
